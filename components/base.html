@@ -1,0 +1,62 @@
+<style></style>
+<template></template>
+<script>
+    export default class extends `meta` {
+
+        #client
+        #defaultLitNetwork = 'serrano'
+        #librarySrc = 'https://cdn.jsdelivr.net/npm/@lit-protocol/lit-node-client-vanilla/lit-node-client.js'
+        #lit = {}
+        #network
+        #ready
+
+        static E_DefaultEventType = 'connected'
+        static E_ValueProperty = 'lit'
+
+        static get observedAttributes() { return (super.observedAttributes || []).concat('network') }
+        static get E_FlattenableProperties() { return (super.E_FlattenableProperties || []).concat('enabled', 'lit', 'network', 'ready') }
+
+        async connectedCallback() {
+            if (this.enabled) await this.connect()
+        }
+
+        get client() { return this.#client }
+
+        get enabled() { return !this.hasAttribute('disabled') }
+        set enabled(value) { this.toggleAttribute('disabled', !!value) }
+
+        get lit() { return this.#lit }
+        set lit(value) { this.connect(value) }
+
+        get network() { return this.#network ?? (this.getAttribute('network') || this.#defaultLitNetwork) }
+        set network(value) { this.#network = value }
+
+        get ready() { return this.#ready }
+        set ready(value) { this.connect(value) }
+
+        async connect(config) {
+            config ||= this.network ?? this.#defaultLitNetwork
+            if (typeof config === 'string') config = { litNetwork: config }
+            if (!window.litNodeClient) {
+                if (!document.querySelector(`script[src="${this.#librarySrc}"]`)) {
+                    const libraryScript = document.createElement('script')
+                    libraryScript.setAttribute('src', this.#librarySrc)
+                    document.head.appendChild(libraryScript)
+                }
+                let sdk = window.LitJsSdk_litNodeClient
+                while (!sdk) {
+                    await new Promise(r => setTimeout(r, 100))
+                    sdk = window.LitJsSdk_litNodeClient
+                }
+                const preClient = new sdk.LitNodeClient(config)
+                await preClient.connect()
+            }
+            this.#client = litNodeClient
+            for (const [k, v] of Object.entries(this.#client)) if (typeof v !== 'function') this.#lit[k] = v
+            Object.freeze(this.#lit)
+            if (this.hasAttribute('disabled')) this.removeAttribute('disabled')
+            this.dispatchEvent(new CustomEvent('connected', { bubbles: true, composed: false, cancelable: true }))
+        }
+
+    }
+</script>

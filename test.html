@@ -21,10 +21,11 @@
 
     <script is="e-flowscript" type="script/flow">
         $(~|#lit!connected) >> {".": "Lit is connected!", "^color": "green", "^font-weight": "bold"} >> $(:|p) 
-        $(~|#lit!connected) >> ($console($.lit))
+        $(~|#lit!connected) >> ($console("connected", $.lit))
+        $(~|#lit!signature) >> ($string($.signature, true)) >> $(:|pre) 
     </script>
 
-    <meta id="lit" is="lit-base">
+    <meta id="lit" is="lit-signature">
 
 </head>
 
@@ -33,6 +34,14 @@
     <h1>Lit Protocol Package Test Page</h1>
 
     <p>Lit is loading...</p>
+
+    <hr>
+
+    <label>
+        Signature:
+        <code><pre>loading...</pre></code>
+    </label>
+
 
 </body>
 

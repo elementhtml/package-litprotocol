@@ -9,6 +9,7 @@
         #lit = {}
         #network
         #ready
+        #sdk
 
         static E_DefaultEventType = 'connected'
         static E_ValueProperty = 'lit'
@@ -34,6 +35,8 @@
         get ready() { return this.#ready }
         set ready(value) { this.connect(value) }
 
+        get sdk() { return this.#sdk }
+
         async connect(config) {
             config ||= this.network ?? this.#defaultLitNetwork
             if (typeof config === 'string') config = { litNetwork: config }
@@ -43,12 +46,12 @@
                     libraryScript.setAttribute('src', this.#librarySrc)
                     document.head.appendChild(libraryScript)
                 }
-                let sdk = window.LitJsSdk_litNodeClient
-                while (!sdk) {
+                this.#sdk = window.LitJsSdk_litNodeClient
+                while (!this.#sdk) {
                     await new Promise(r => setTimeout(r, 100))
-                    sdk = window.LitJsSdk_litNodeClient
+                    this.#sdk = window.LitJsSdk_litNodeClient
                 }
-                const preClient = new sdk.LitNodeClient(config)
+                const preClient = new this.#sdk.LitNodeClient(config)
                 await preClient.connect()
             }
             this.#client = litNodeClient
@@ -56,6 +59,7 @@
             Object.freeze(this.#lit)
             if (this.hasAttribute('disabled')) this.removeAttribute('disabled')
             this.dispatchEvent(new CustomEvent('connected', { bubbles: true, composed: false, cancelable: true }))
+            if (typeof this.litConnectedCallback === 'function') this.litConnectedCallback()
         }
 
     }

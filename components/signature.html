@@ -3,6 +3,23 @@
 <script>
     export default class extends `./base` {
 
+        #chain
+        #signature
+
+        static E_ValueProperty = 'signature'
+
+        static get observedAttributes() { return (super.observedAttributes || []).concat('chain') }
+        static get E_FlattenableProperties() { return (super.E_FlattenableProperties || []).concat('chain', 'signature') }
+
+        get chain() { return this.#chain ?? this.getAttribute('chain') }
+        set chain(value) { this.#chain = value }
+
+        async litConnectedCallback() {
+            this.#signature = await this.sdk.checkAndSignAuthMessage({ chain: "ethereum" })
+            this.dispatchEvent(new CustomEvent('signature', { bubbles: true, composed: false, cancelable: true, detail: this.#signature }))
+        }
+
+        get signature() { return this.#signature }
 
     }
 </script>
